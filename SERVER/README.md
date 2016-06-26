@@ -7,7 +7,7 @@ This is the server component of the project. It is completely written in PHP (si
 ## Requirements
 * PHP 7.0 or greater installed
 * [Composer] installed
-* [Stunnel] (Not required, but recommended)
+* [Stunnel] - Not required, but recommended
 
 ## Clone & Install
 1. `git clone git@github.com:kevynpferd/phredUNO.git`  
