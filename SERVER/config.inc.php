@@ -4,8 +4,8 @@
   $dbHost = "127.0.0.1";
   $dbUser = "root";
   $dbPass = "";
-  $dbName = "phredUNO";
-  $dbPrefix = "game_";
+  $dbName = "sql1phredUNO";
+  $dbPrefix = "uno_";
 
   /* Some various settings */
   $debug = false;
