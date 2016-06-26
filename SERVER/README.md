@@ -15,7 +15,7 @@ This is the server component of the project. It is completely written in PHP (si
 3. `composer install`
 
 ## Execution
-1. Import the .sql in the SERVER directory in a database
+1. Import the .sql in the SERVER directory in an EXISTING database
 2. Add the credentials to access the database to the config.inc.php found in the SERVER directory
 3. Navigate to the SERVER directory
 4. Run `php Server.php`
