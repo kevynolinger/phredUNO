@@ -31,7 +31,7 @@
       $name = iconv("UTF-8", "ISO-8859-1//TRANSLIT//IGNORE", str_replace("/\s+/", "_", strtolower($name)));
       $password = ($password != "" ? hash("sha256", $password) : "");
 
-      Core::getDB()->query("SELECT gameID, password FROM ". DBPREFIX ."game WHERE name = :name AND ended = :date ORDER BY gameID DESC LIMIT 1");
+      Core::getDB()->query("SELECT gameID, password FROM ". DB_PREFIX ."game WHERE name = :name AND ended = :date ORDER BY gameID DESC LIMIT 1");
       Core::getDB()->bind(":name", $name);
       Core::getDB()->bind(":date", "0000-00-00 00:00:00");
       $result = Core::getDB()->single();
