@@ -4,7 +4,7 @@
    * @author: Kevin Olinger, 2016-06-20
    * @copyright: 2016+ Kevin Olinger
    *
-   * Last modified: 2016-06-25
+   * Last modified: 2016-06-28
    */
 
   namespace phredUNO\system\game;
@@ -28,15 +28,30 @@
 
         Core::getGame()->basic()->addPlayer($gameID, $token);
 
+        $players = array();
+        $plys = Core::getGame()->basic()->getPlayers($gameID);
+
+        foreach($plys as $ply) $players[Core::getUser()->getUsername($ply)] = Core::getUser()->getGravatarHash($ply);
+
+        foreach($plys as $ply) {
+          Core::getUser()->order($ply, array(
+            "name" => Core::getGame()->basic()->getName($gameID),
+            "slots" => Core::getGame()->basic()->getSlots($gameID),
+            "cards" => Core::getGame()->basic()->getCardAmount($gameID),
+            "creator" => Core::getUser()->getUsername(Core::getGame()->basic()->getCreator($gameID)),
+            "players" => $players
+          ), "updategamewaiting");
+        }
+
         Core::getUser()->setGame($token, $gameID);
-      } else {
-        Core::getClient()->sendError($client, 3);
-      }
+
+        if(Core::getGame()->basic()->getUsedSlots($gameID) >= Core::getGame()->basic()->getSlots($gameID)) Core::getGame()->management()->start($gameID);
+      } else Core::getClient()->sendError($client, 3);
     }
 
     public function turn($gameID, $token, $client, $card) {
       if(Core::getGame()->basic()->exists($gameID)) {
-        if(Core::getGame()->basic()->hasStarted($gameID)) {
+        if(!Core::getGame()->basic()->hasStarted($gameID)) {
           Core::getClient()->sendError($client, 22, "Tried to play a turn in a not-yet-started game with the ID '". $gameID ."'");
 
           return;
@@ -44,6 +59,12 @@
 
         if(!in_array($token, Core::getGame()->basic()->getPlayers($gameID))) {
           Core::getClient()->sendError($client, 23);
+
+          return;
+        }
+
+        if(Core::getGame()->basic()->getCurrentPlayerUsername($gameID) != Core::getUser()->getUsername($token)) {
+          Core::getClient()->sendError($client, 26);
 
           return;
         }
@@ -58,7 +79,7 @@
         $check = false;
         $lastTurn = (Core::getGame()->basic()->getLastTurner($gameID) == $token ? true : false);
 
-        //Core::getLog()->debug("Card color: ". $cardColor ." - Current card color: ". $currentCardColor ." - Card number: ". $cardNumber ." - Current card number: ". $currentCardNumber);
+        Core::getLog()->debug(Core::getUser()->getUsername($token) .": New card color: ". $cardColor ." - Current card color: ". $currentCardColor ." ; New card number: ". $cardNumber ." - Current card number: ". $currentCardNumber);
 
         if(($cardColor == $currentCardColor || $cardNumber == $currentCardNumber) && !$lastTurn) $check = true;
         else if($cardNumber == $currentCardNumber && $lastTurn) $check = true;
@@ -105,10 +126,14 @@
 
       if($check) {
         Core::getGame()->basic()->setCurrentPlayer($gameID);
+        Core::getGame()->basic()->setLastTurner($gameID, $token);
+
         Core::getGame()->management()->sendCurrentPlayer($gameID);
 
         Core::getUser()->removeUno($token);
       }
+
+      Core::getLog()->debug(Core::getUser()->getUsername($token) ." finished its round");
     }
 
     public function leave($gameID, $token, $client) {
