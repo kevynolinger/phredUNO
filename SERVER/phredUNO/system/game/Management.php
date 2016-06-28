@@ -4,7 +4,7 @@
    * @author: Kevin Olinger, 2016-06-20
    * @copyright: 2016+ Kevin Olinger
    *
-   * Last modified: 2016-06-26
+   * Last modified: 2016-06-28
    */
 
   namespace phredUNO\system\game;
@@ -12,23 +12,23 @@
 
   class Management {
 
-    public function new($name, $password, $slots, $cards): int {
+    public function new($name, $password, $slots, $cards, $token): int {
       $displayName = $name;
       $name = iconv("UTF-8", "ISO-8859-1//TRANSLIT//IGNORE", str_replace("/\s+/", "_", strtolower($name)));
       $password = ($password != "" ? hash("sha256", $password) : "");
 
       $slots = ($slots < 2 ? 2 : $slots);
       $cards = ($cards < 3 ? 3 : $cards);
-      $cards = ($cards > 10 ? 10 : $cards);
+      $cards = ($cards > 8 ? 8 : $cards);
 
-      Core::getDB()->query("SELECT gameID FROM ". DBPREFIX ."game WHERE name = :name AND ended = :date LIMIT 1");
+      Core::getDB()->query("SELECT gameID FROM ". DB_PREFIX ."game WHERE name = :name AND ended = :date LIMIT 1");
       Core::getDB()->bind(":name", $name);
       Core::getDB()->bind(":date", "0000-00-00 00:00:00");
       $result = Core::getDB()->single();
 
       if(Core::getDB()->rowCount() == 1) return 0;
 
-      Core::getDB()->query("INSERT INTO ". DBPREFIX ."game (name, password, numPlayers, numCards, created) VALUES (:name, :password, :players, :cards, :date)");
+      Core::getDB()->query("INSERT INTO ". DB_PREFIX ."game (name, password, numPlayers, numCards, created) VALUES (:name, :password, :players, :cards, :date)");
       Core::getDB()->bind(":name", $name);
       Core::getDB()->bind(":password", $password);
       Core::getDB()->bind(":players", $slots);
@@ -38,7 +38,7 @@
 
       $gameID = Core::getDB()->lastInsertId();
 
-      Core::getGame()->basic()->create($gameID, $name, $displayName, $password, $slots, $cards);
+      Core::getGame()->basic()->create($gameID, $name, $displayName, $password, $slots, $cards, $token);
 
       Core::getLog()->info("Game '". $displayName ."' (ID: ". $gameID . ($password != "" ? ", password protected" : "") .") successfully created");
       Core::getLog()->debug("Game '". $displayName ."' parameters: Slots -> ". $slots ." ; Cards -> ". $slots);
@@ -53,7 +53,7 @@
       foreach(Core::getGame()->basic()->getPlayers($gameID) as $ply) {
         Core::getUser()->removeCards($ply);
 
-        for($i = 1; $i <= Core::getGame()->basic()->getCardAmount($gameID); $i++) Core::getGame()->management()->getRandomCard($gameID, $token);
+        for($i = 1; $i <= Core::getGame()->basic()->getCardAmount($gameID); $i++) $this->getRandomCard($gameID, $ply);
 
         Core::getUser()->order($ply, array(
           "gameID" => $gameID,
@@ -63,12 +63,15 @@
         Core::getUser()->removeUno($ply);
       }
 
-      Core::getDB()->query("UPDATE ". DBPREFIX ."game SET started = :date WHERE gameID = :gameID");
+      Core::getDB()->query("UPDATE ". DB_PREFIX ."game SET started = :date WHERE gameID = :gameID");
       Core::getDB()->bind(":date", date("Y-m-d-H-i-s"));
       Core::getDB()->bind(":gameID", $gameID);
       Core::getDB()->execute();
 
       Core::getGame()->basic()->setCurrentCard($gameID, array_rand(Core::getGame()->basic()->getCards($gameID), 1));
+
+      $this->sendCurrentCard($gameID);
+      $this->sendCurrentPlayer($gameID);
 
       Core::getLog()->info("Game '". Core::getGame()->basic()->getName($gameID) ."' (ID: ". $gameID .") started");
     }
@@ -85,7 +88,7 @@
           "winner" => Core::getUser()->getUsername($token)
         ), "gameend");
 
-        Core::getDB()->query("INSERT INTO ". DBPREFIX ."play VALUES (:gameID, :accountID, :score, :status)");
+        Core::getDB()->query("INSERT INTO ". DB_PREFIX ."play VALUES (:gameID, :accountID, :score, :status)");
         Core::getDB()->bind(":gameID", $gameID);
         Core::getDB()->bind(":accountID", Core::getUser()->getAccountID($ply));
         Core::getDB()->bind(":score", ($token == $ply ? 1 : 0));
@@ -93,7 +96,7 @@
         Core::getDB()->execute();
       }
 
-      Core::getDB()->query("UPDATE ". DBPREFIX ."game SET ended = :date WHERE gameID = :gameID");
+      Core::getDB()->query("UPDATE ". DB_PREFIX ."game SET ended = :date WHERE gameID = :gameID");
       Core::getDB()->bind(":date", date("Y-m-d-H-i-s"));
       Core::getDB()->bind(":gameID", $gameID);
       Core::getDB()->execute();
@@ -102,6 +105,15 @@
       Core::getUtils()->log()->info("Game '". Core::getGame()->basic()->getName($gameID) ."' (ID: ". $gameID .") stopped, closed and removed");
 
       unset($this->games[$gameID]);
+    }
+
+    public function cleanup() {
+      $this->games = array();
+
+      Core::getDB()->query("UPDATE ". DB_PREFIX ."game SET ended = :date WHERE ended = :dateEmpty");
+      Core::getDB()->bind(":date", date("Y-m-d-H-i-s"));
+      Core::getDB()->bind(":dateEmpty", "0000-00-00 00:00:00");
+      Core::getDB()->execute();
     }
 
     /* SEND methods */
@@ -147,7 +159,7 @@
         if($notify) {
           Core::getUser()->order($token, array(
             "message" => "You got a new card",
-            "card" => $card
+            "card" => $randomCard
           ), "newcard");
         }
 
