@@ -4,7 +4,7 @@
    * @author: Kevin Olinger, 2016-06-26
    * @copyright: 2016+ Kevin Olinger
    *
-   * Last modified: 2016-06-26
+   * Last modified: 2016-06-28
    */
 
   namespace phredUNO\action;
@@ -27,7 +27,7 @@
         return;
       }
 
-      $gameID = Core::getGame()->new($this->paramValue("name"), ($this->paramValue("password") != null ? $this->paramValue("password") : ""), $this->paramValue("players"), $this->paramValue("cards"));
+      $gameID = Core::getGame()->management()->new($this->paramValue("name"), ($this->paramValue("password") != null ? $this->paramValue("password") : ""), $this->paramValue("players"), $this->paramValue("cards"), $this->token);
 
       if($gameID != 0) {
         Core::getClient()->sendSuccess($this->client, array(

@@ -4,7 +4,7 @@
    * @author: Kevin Olinger, 2016-06-26
    * @copyright: 2016+ Kevin Olinger
    *
-   * Last modified: 2016-06-26
+   * Last modified: 2016-06-28
    */
 
   namespace phredUNO\action;
@@ -26,7 +26,7 @@
 
       $card = $this->paramValue("card");
       $gameID = Core::getUser()->getGame($this->token);
-      $currentPlayer = Core::getGame()->getCurrentPlayerUsername($gameID);
+      $currentPlayer = Core::getGame()->basic()->getCurrentPlayerUsername($gameID);
 
       if(!Core::getUser()->getCard($this->token, $card)) {
         Core::getClient()->sendError($this->client, 19);
@@ -40,7 +40,7 @@
         return;
       }
 
-      Core::getGame()->turn($gameID, $this->token, $this->client, $card);
+      Core::getGame()->player()->turn($gameID, $this->token, $this->client, $card);
     }
 
   }

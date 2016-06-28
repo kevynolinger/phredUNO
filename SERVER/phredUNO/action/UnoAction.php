@@ -4,7 +4,7 @@
    * @author: Kevin Olinger, 2016-06-26
    * @copyright: 2016+ Kevin Olinger
    *
-   * Last modified: 2016-06-26
+   * Last modified: 2016-06-28
    */
 
   namespace phredUNO\action;
@@ -20,7 +20,7 @@
         return;
       }
 
-      Core::getGame()->management()->uno(Core::getUser()->getGame($this->token), $this->token, $this->client);
+      Core::getGame()->player()->uno(Core::getUser()->getGame($this->token), $this->token, $this->client);
     }
 
   }
