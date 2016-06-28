@@ -87,7 +87,7 @@
             "status" => $status,
             "from" => $from,
             "code" => $code,
-            "response" => ($response != "" ? $response : (Core::getUtils()->error()->exists($code) ? Core::getUtils()->error()->get($code) : "Unknown error"));
+            "response" => ($response != "" ? $response : (Core::getUtils()->error()->exists($code) ? Core::getUtils()->error()->get($code) : "Unknown error"))
           )
         )
       );
