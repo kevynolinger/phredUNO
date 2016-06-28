@@ -4,7 +4,7 @@
    * @author: Kevin Olinger, 2016-06-16
    * @copyright: 2016+ Kevin Olinger
    *
-   * Last modified: 2016-06-18
+   * Last modified: 2016-06-27
    */
 
    namespace phredUNO;
@@ -13,6 +13,7 @@
    use phredUNO\system\User;
    use phredUNO\system\Gameserver;
    use phredUNO\system\Game;
+   use phredUNO\system\Client;
    use phredUNO\database\Database;
 
    use Ratchet\Server\IoServer;
@@ -28,6 +29,7 @@
      protected static $servObj = null;
      protected static $userObj = null;
      protected static $gameObj = null;
+     protected static $clientObj = null;
 
      public function __construct() {
        $this->defineGlobs();
@@ -35,10 +37,12 @@
        self::$utilsObj = new Utils();
        self::$userObj = new User();
        self::$gameObj = new Game();
+       self::$clientObj = new Client();
 
        $this->initDB();
        $this->initServer();
 
+       self::getGame()->management()->cleanup();
        self::getServ()->run();
        //self::getLog()->error(1);
      }
@@ -68,6 +72,7 @@
      public static final function getUser(): User { return self::$userObj; }
      public static final function getServ() { return self::$servObj; }
      public static final function getGame(): Game { return self::$gameObj; }
+     public static final function getClient(): Client { return self::$clientObj; }
 
      protected function defineGlobs() {
        require_once(dirname(__DIR__) ."/config.inc.php");
