@@ -4,21 +4,22 @@
    * @author: Kevin Olinger, 2016-06-18
    * @copyright: 2016+ Kevin Olinger
    *
-   * Last modified: 2016-06-20
+   * Last modified: 2016-06-28
    */
 
   namespace phredUNO\system\game;
+  use phredUNO\Core;
 
   class Basic {
 
     protected $games = array();
 
     public function exists($gameID): bool {
-      if(array_key_exists($gameID, $this->games)) return false;
-      else return true;
+      if(array_key_exists($gameID, $this->games)) return true;
+      else return false;
     }
 
-    public function create($gameID, $name, $displayName, $password, $slots, $cards): bool {
+    public function create($gameID, $name, $displayName, $password, $slots, $cards, $token): bool {
       if($this->exists($gameID)) return false;
       else {
         $this->games[$gameID] = array();
@@ -27,6 +28,7 @@
         $this->games[$gameID]["name"] = $name;
         $this->games[$gameID]["displayName"] = $displayName;
         $this->games[$gameID]["password"] = $password;
+        $this->games[$gameID]["creator"] = $token;
 
         $this->games[$gameID]["slots"] = $slots;
         $this->games[$gameID]["cardsamount"] = $cards;
@@ -123,6 +125,8 @@
           "blue9_1" => "blue9_1",
           "blue9_2" => "blue9_2"
         );
+
+        return true;
       } else return false;
     }
 
@@ -244,7 +248,7 @@
       else return null;
     }
 
-    public function getCardAmount($game): int {
+    public function getCardAmount($gameID): int {
       if($this->exists($gameID)) return $this->games[$gameID]["cardsamount"];
       else return 0;
     }
@@ -259,7 +263,7 @@
     }
 
     public function getCurrentPlayer($gameID): int {
-      if($this->exists($gameID)) return $this->games["gameID"]["currentplayer"];
+      if($this->exists($gameID)) return $this->games[$gameID]["currentplayer"];
       else return 0;
     }
 
@@ -280,6 +284,11 @@
     public function getLastTurner($gameID): string {
       if($this->exists($gameID)) return $this->games[$gameID]["lastturn"];
       else return null;
+    }
+
+    public function getCreator($gameID): string {
+      if($this->exists($gameID)) return $this->games[$gameID]["creator"];
+      else return "Unknown";
     }
 
   }
