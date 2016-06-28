@@ -37,7 +37,8 @@
        22 => "Tried to play a turn in a not-yet started game",
        23 => "You can not take a turn in a game you are not a part of",
        24 => "Can not play the selected card",
-       25 => "You forgot to UNO"
+       25 => "You forgot to UNO",
+       26 => "It is not your turn"
      );
 
      public function exists($errCode): bool {
