@@ -4,7 +4,7 @@
    * @author: Kevin Olinger, 2016-06-21
    * @copyright: 2016+ Kevin Olinger
    *
-   * Last modified: 2016-06-21
+   * Last modified: 2016-06-28
    */
 
   namespace phredUNO\system;
@@ -32,12 +32,12 @@
       $this->users[$token]["cards"] = array();
     }
 
-    public function update($accountID, $token, $client, $username) {
+    public function update($accountID, $token, $client, $username, $gravatarHash) {
       if(!$this->exists($token)) $this->create($accountID, $token, $username);
-      else {
-        $this->users[$token]["username"] = $username;
-        $this->users[$token]["clients"][$client] = $client;
-      }
+      else $this->users[$token]["username"] = $username;
+
+      $this->users[$token]["clients"][$client] = $client;
+      $this->users[$token]["gravatarHash"] = $gravatarHash;
 
       Core::getClient()->setToken($client, $token);
     }
@@ -63,7 +63,7 @@
     }
 
     public function order($token, $data, $order) {
-      foreach($this->users[$token]["clients"] as $client) Core::getClient()->response($client, $data, 0, "order", $order);
+      foreach($this->users[$token]["clients"] as $client) Core::getClient()->order($client, $data, $order);
     }
 
     /* ADD */
@@ -123,7 +123,7 @@
           ), "joingame");
         } else {
           $this->setStatus($token, 1);
-          $this->order($token, "You left '". Core::getGame()->basic()->getName($gameID) ."'.", "leftgame");
+          $this->order($token, "You left a game.", "leftgame");
         }
 
         return true;
@@ -149,6 +149,11 @@
       else return "Unknown";
     }
 
+    public function getGravatarHash($token): string {
+      if($this->exists($token)) return $this->users[$token]["gravatarHash"];
+      else return "null";
+    }
+
     public function getStatus($token): int {
       if($this->exists($token)) return $this->users[$token]["status"];
       else return 0;
@@ -172,7 +177,7 @@
     }
 
     public function getUno($token): bool {
-      if($this->exists($token)) $this->users[$token]["uno"];
+      if($this->exists($token)) return $this->users[$token]["uno"];
       else return false;
     }
 
