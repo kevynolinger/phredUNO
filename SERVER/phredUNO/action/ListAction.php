@@ -18,7 +18,7 @@
     }
 
     public function execute() {
-      Core::getDB()->query("SELECT gameID, name, password, numPlayers, created FROM ". DBPREFIX ."game WHERE name LIKE :gameName AND started = :dateEmpty AND ended = :dateEmpty");
+      Core::getDB()->query("SELECT gameID, name, password, numPlayers, created FROM ". DB_PREFIX ."game WHERE name LIKE :gameName AND started = :dateEmpty AND ended = :dateEmpty");
       Core::getDB()->bind(":gameName", "%". $this->paramValue("name") ."%");
       Core::getDB()->bind(":dateEmpty", "0000-00-00 00:00:00");
       $result = Core::getDB()->resultset();
