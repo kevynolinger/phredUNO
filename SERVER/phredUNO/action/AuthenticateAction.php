@@ -25,7 +25,7 @@
         return;
       }
 
-      Core::getDB()->query("SELECT accountID, username, language FROM ". DBPREFIX ."account WHERE token = :token LIMIT 1");
+      Core::getDB()->query("SELECT accountID, username, email, language FROM ". DB_PREFIX ."account WHERE token = :token LIMIT 1");
       Core::getDB()->bind(":token", $this->paramValue("token"));
       $result = Core::getDB()->single();
 
@@ -35,9 +35,9 @@
         return;
       }
 
-      Core::getUser()->update($result["accountID"],  $this->paramValue("token"), $this->client, $result["username"]);
+      Core::getUser()->update($result["accountID"],  $this->paramValue("token"), $this->client, $result["username"], md5(strtolower(trim($result["email"]))));
 
-      Core::getDB()->query("INSERT INTO ". DBPREFIX ."token_usage (accountID, date, IP, device) VALUES (:accountID, :date, :IP, :device)");
+      Core::getDB()->query("INSERT INTO ". DB_PREFIX ."token_usage (accountID, date, IP, device) VALUES (:accountID, :date, :IP, :device)");
       Core::getDB()->bind(":accountID", $result["accountID"]);
       Core::getDB()->bind(":date", date("Y-m-d-H-i-s"));
       Core::getDB()->bind(":IP", Core::getClient()->get($this->client)->remoteAddress);
@@ -46,11 +46,11 @@
 
       Core::getLog()->info("Token '". $this->paramValue("token") ."' has been used to authenticate ". Core::getUser()->getUsername($this->paramValue("token")), $this->client);
 
-      Core::getClient()->sendSuccess($this->client, array(
+      Core::getClient()->order($this->client, array(
         "message" => "Successfully authenticated!",
         "username" => $result["username"],
         "language" => $result["language"]
-      ));
+      ), "authenticate");
     }
 
   }
